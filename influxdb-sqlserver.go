@@ -283,7 +283,7 @@ func init() {
 // Utils
 //
 func connectionString(server cfg.Server) string {
-	connString := fmt.Sprintf( "Server=%s;Port=%v;app name=influxdb-sqlserver;log=1;Integrated Security=SSPI;", server.IP, server.Port)
+	connString := fmt.Sprintf( "Server=%s;app name=influxdb-sqlserver;log=32;Integrated Security=SSPI;", server.IP)
 
 	if len(server.Username) > 0 {
 		connString = fmt.Sprintf( "Server=%s;Port=%v;User Id=%s;Password=%s;app name=influxdb-sqlserver;log=1",
