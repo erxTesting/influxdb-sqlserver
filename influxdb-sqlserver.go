@@ -326,7 +326,7 @@ func main() {
 			// test if path exists
 			scriptPath := cfg.DefaultSqlScriptPath + script.Name
 			if len(config.General.ScriptPath) > 0 {
-				scriptPath := config.General.ScriptPath + script.Name
+				scriptPath = config.General.ScriptPath + script.Name
 			}
 			scriptInterval := script.Interval
 
