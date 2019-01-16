@@ -199,11 +199,6 @@ func (toml *TOMLConfig) Validate() error {
 		if server.IP == "" {
 			return fmt.Errorf("SQL Server instance IP is not defined")
 		}
-
-		if server.Port < 1 || server.Port > 65535 {
-			return fmt.Errorf("InfluxDB url port must be within [1-65535] but "+
-				"was '%d'", server.Port)
-		}
 	}
 
 	// Scripts
@@ -283,11 +278,19 @@ func init() {
 // Utils
 //
 func connectionString(server cfg.Server) string {
-	connString := fmt.Sprintf( "Server=%s;app name=influxdb-sqlserver;log=32;Integrated Security=SSPI;", server.IP)
+	// Omit the port if it is zero (i.e. not set in the config)
+	portStr := ""
+	if (server.Port >= 1 && server.Port <= 65535) {
+		portStr = fmt.Sprintf("Port=%v,", server.Port)
+	}
 
+	// Start off with integrated Windows auth
+	connString := fmt.Sprintf( "Server=%s;%sapp name=influxdb-sqlserver;log=1;Integrated Security=SSPI;", server.IP, portStr)
+
+	// If a username is supplied then we will use SQL Auth with username/password provided
 	if len(server.Username) > 0 {
-		connString = fmt.Sprintf( "Server=%s;Port=%v;User Id=%s;Password=%s;app name=influxdb-sqlserver;log=1",
-									server.IP, server.Port, server.Username, server.Password)
+		connString = fmt.Sprintf( "Server=%s;%sUser Id=%s;Password=%s;app name=influxdb-sqlserver;log=1",
+									server.IP, portStr, server.Username, server.Password)
 	}
 
 	return connString
