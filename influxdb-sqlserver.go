@@ -324,10 +324,9 @@ func main() {
 		for _, script := range scripts { // foreach script
 
 			// test if path exists
+			scriptPath := cfg.DefaultSqlScriptPath + script.Name
 			if len(config.General.ScriptPath) > 0 {
 				scriptPath := config.General.ScriptPath + script.Name
-			} else {
-				scriptPath := cfg.DefaultSqlScriptPath + script.Name
 			}
 			scriptInterval := script.Interval
 
