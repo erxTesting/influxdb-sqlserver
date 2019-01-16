@@ -324,7 +324,7 @@ func main() {
 		for _, script := range scripts { // foreach script
 
 			// test if path exists
-			scriptPath := cfg.DefaultSqlScriptPath + script.Name
+			scriptPath := config.General.ScriptPath + script.Name
 			scriptInterval := script.Interval
 
 			if _, err := os.Stat(scriptPath); err != nil {
@@ -332,6 +332,8 @@ func main() {
 				log.Error(3, "Script file path does not exist!", err)
 				panic(err)
 			}
+			
+			log.Info(fmt.Sprintf("Using scripts from %s", config.General.ScriptPath))
 
 			//  start collect within a go routine
 			wg.Add(1) // increment the WaitGroup counter

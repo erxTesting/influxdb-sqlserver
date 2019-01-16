@@ -29,11 +29,15 @@ const (
 )
 
 type TOMLConfig struct {
+	General  general
 	InfluxDB influxDB
 	Servers  map[string]Server
 	Scripts  map[string]*script
 	Polling  polling
 	Logging  logging
+}
+type general struct {
+	ScriptPath      string
 }
 type polling struct {
 	Interval        int
