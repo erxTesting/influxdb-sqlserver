@@ -326,7 +326,7 @@ func main() {
 		// set connString
 		connString := connectionString(server)
 
-		log.Trace(fmt.Sprintf("Using connection string: %s", conString))
+		log.Trace(fmt.Sprintf("Using connection string: %s", connString))
 
 		for _, script := range scripts { // foreach script
 
