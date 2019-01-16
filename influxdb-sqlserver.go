@@ -15,11 +15,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/zensqlmonitor/influxdb-sqlserver/Godeps/_workspace/src/github.com/BurntSushi/toml"
+	"github.com/bazauto/influxdb-sqlserver/Godeps/_workspace/src/github.com/BurntSushi/toml"
 
-	cfg "github.com/zensqlmonitor/influxdb-sqlserver/config"
-	"github.com/zensqlmonitor/influxdb-sqlserver/etl"
-	"github.com/zensqlmonitor/influxdb-sqlserver/log"
+	cfg "github.com/bazauto/influxdb-sqlserver/config"
+	"github.com/bazauto/influxdb-sqlserver/etl"
+	"github.com/bazauto/influxdb-sqlserver/log"
 )
 
 var wg sync.WaitGroup
@@ -324,7 +324,11 @@ func main() {
 		for _, script := range scripts { // foreach script
 
 			// test if path exists
-			scriptPath := config.General.ScriptPath + script.Name
+			if len(config.General.ScriptPath) > 0 {
+				scriptPath := config.General.ScriptPath + script.Name
+			} else {
+				scriptPath := cfg.DefaultSqlScriptPath + script.Name
+			}
 			scriptInterval := script.Interval
 
 			if _, err := os.Stat(scriptPath); err != nil {
@@ -332,8 +336,6 @@ func main() {
 				log.Error(3, "Script file path does not exist!", err)
 				panic(err)
 			}
-			
-			log.Info(fmt.Sprintf("Using scripts from %s", config.General.ScriptPath))
 
 			//  start collect within a go routine
 			wg.Add(1) // increment the WaitGroup counter
