@@ -326,6 +326,8 @@ func main() {
 		// set connString
 		connString := connectionString(server)
 
+		log.Trace(fmt.Sprintf("Using connection string: %s", conString))
+
 		for _, script := range scripts { // foreach script
 
 			// test if path exists
