@@ -47,7 +47,7 @@ WHERE spi.object_name NOT LIKE 'SQLServer:Backup Device%'
 -- <measurement>[,<tag-key>=<tag-value>...] <field-key>=<field-value>[,<field2-key>=<field2-value>...] [unix-nano-timestamp]
 
 
-SELECT 
+SELECT
 -- measurement
 result = REPLACE(cc.counter_name + CASE WHEN LEN(cc.instance_name) > 0 THEN ' | ' + REPLACE(cc.instance_name, ' ', '\ ') ELSE '' END , ' ', '\ ')
 -- tags
@@ -56,12 +56,12 @@ result = REPLACE(cc.counter_name + CASE WHEN LEN(cc.instance_name) > 0 THEN ' | 
 -- value
 + ' value=' + CAST(CAST(Case cc.cntr_type
     When 65792 Then cc.cntr_value -- Count
-    When 537003264 Then IsNull(Cast(cc.cntr_value as Money) / NullIf(cbc.cntr_value, 0), 0) -- Ratio
+    When 537003264 Then IsNull(Cast(cc.cntr_value as MONEY) / NullIf(cbc.cntr_value, 0), 0) -- Ratio
     When 272696576 Then cc.cntr_value - pc.cntr_value -- Per Second
-    When 1073874176 Then IsNull(Cast(cc.cntr_value - pc.cntr_value as Money) / NullIf(cbc.cntr_value - pbc.cntr_value, 0), 0) -- Avg
+    When 1073874176 Then IsNull(Cast(cc.cntr_value - pc.cntr_value as MONEY) / NullIf(cbc.cntr_value - pbc.cntr_value, 0), 0) -- Avg
     When 1073939712 Then cc.cntr_value - pc.cntr_value -- Base
-    Else cc.cntr_value End as bigint) as varchar(19))
---+ ' ' + CAST(DATEDIFF(SECOND,{d '1970-01-01'}, GETDATE()) as varchar(32)) + '000000000' 
+    Else cc.cntr_value End as bigint) as varchar(16))
+--+ ' ' + CAST(DATEDIFF(SECOND,{d '1970-01-01'}, GETDATE()) as varchar(32)) + '000000000'
 FROM #CCounters cc
 INNER JOIN #PCounters pc On cc.object_name = pc.object_name
         And cc.counter_name = pc.counter_name
@@ -72,7 +72,7 @@ LEFT JOIN #CCounters cbc On cc.object_name = cbc.object_name
                   When cc.object_name = 'SQLServer:FileTable' Then Replace(cc.counter_name, 'Avg ','') + ' base'
                   When cc.counter_name = 'Worktables From Cache Ratio' Then 'Worktables From Cache Base'
                   When cc.counter_name = 'Avg. Length of Batched Writes' Then 'Avg. Length of Batched Writes BS'
-                  Else cc.counter_name + ' base' 
+                  Else cc.counter_name + ' base'
              End) = cbc.counter_name
         And cc.instance_name = cbc.instance_name
         And cc.cntr_type In (537003264, 1073874176)
@@ -83,7 +83,7 @@ LEFT JOIN #PCounters pbc On pc.object_name = pbc.object_name
                   When pc.object_name = 'SQLServer:FileTable' Then Replace(pc.counter_name, 'Avg ','') + ' base'
                   When pc.counter_name = 'Worktables From Cache Ratio' Then 'Worktables From Cache Base'
                   When pc.counter_name = 'Avg. Length of Batched Writes' Then 'Avg. Length of Batched Writes BS'
-                  Else pc.counter_name + ' base' 
+                  Else pc.counter_name + ' base'
              End) = pbc.counter_name
         And pc.cntr_type In (537003264, 1073874176)
         And pbc.cntr_type = 1073939712
@@ -91,4 +91,3 @@ LEFT JOIN #PCounters pbc On pc.object_name = pbc.object_name
 ORDER BY 1
 IF OBJECT_ID('tempdb..#CCounters') IS NOT NULL DROP TABLE #CCounters;
 IF OBJECT_ID('tempdb..#PCounters') IS NOT NULL DROP TABLE #PCounters;
-
