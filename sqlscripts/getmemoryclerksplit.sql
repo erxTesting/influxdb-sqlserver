@@ -23,6 +23,7 @@ BEGIN
         WHEN ''MEMORYCLERK_SQLBUFFERPOOL'' THEN ''Buffer pool''
         WHEN ''CACHESTORE_SQLCP'' THEN ''Cache (sql plans)''
         WHEN ''CACHESTORE_OBJCP'' THEN ''Cache (objects)''
+        WHEN ''OBJECTSTORE_LOCK_MANAGER'' THEN ''Lock Manager''
         ELSE ''Other'' END
     , SUM((single_pages_kb + multi_pages_kb) * 1024) AS UsedBytes
     , Cast(100 * Sum((single_pages_kb + multi_pages_kb))*1.0/(Select Sum((single_pages_kb + multi_pages_kb)) From sys.dm_os_memory_clerks) as Decimal(7, 4)) UsedPercent
@@ -32,6 +33,7 @@ BEGIN
         WHEN ''MEMORYCLERK_SQLBUFFERPOOL'' THEN ''Buffer pool''
         WHEN ''CACHESTORE_SQLCP'' THEN ''Cache (sql plans)''
         WHEN ''CACHESTORE_OBJCP'' THEN ''Cache (objects)''
+        WHEN ''OBJECTSTORE_LOCK_MANAGER'' THEN ''Lock Manager''
         ELSE ''Other'' END
     ) as T
     GROUP BY ClerkCategory;'
@@ -49,6 +51,7 @@ BEGIN
         WHEN ''MEMORYCLERK_SQLBUFFERPOOL'' THEN ''Buffer pool''
         WHEN ''CACHESTORE_SQLCP'' THEN ''Cache (sql plans)''
         WHEN ''CACHESTORE_OBJCP'' THEN ''Cache (objects)''
+        WHEN ''OBJECTSTORE_LOCK_MANAGER'' THEN ''Lock Manager''
         ELSE ''Other'' END
     , SUM(pages_kb * 1024) AS UsedBytes
     , Cast(100 * Sum(pages_kb)*1.0/(Select Sum(pages_kb) From sys.dm_os_memory_clerks) as Decimal(7, 4)) UsedPercent
@@ -58,6 +61,7 @@ BEGIN
         WHEN ''MEMORYCLERK_SQLBUFFERPOOL'' THEN ''Buffer pool''
         WHEN ''CACHESTORE_SQLCP'' THEN ''Cache (sql plans)''
         WHEN ''CACHESTORE_OBJCP'' THEN ''Cache (objects)''
+        WHEN ''OBJECTSTORE_LOCK_MANAGER'' THEN ''Lock Manager''
         ELSE ''Other'' END
     ) as T
     GROUP BY ClerkCategory;'
@@ -74,6 +78,7 @@ Measurement
 + ' BufferPool=' + [Buffer Pool]
 + ',Cache(objects)=' + [Cache (objects)]
 + ',Cache(sqlplans)=' + [Cache (sql plans)]
++ ',LockManager=' + [Lock Manager]
 + ',Other=' + [Other]
 FROM
 (
@@ -81,12 +86,13 @@ SELECT Measurement = 'UsedPercent'
 , [Buffer Pool] = CAST(ISNULL(ROUND([Buffer Pool], 1), 0) as varchar(16))
 , [Cache (objects)] = CAST(ISNULL(ROUND([Cache (objects)], 1), 0) as varchar(16))
 , [Cache (sql plans)] = CAST(ISNULL(ROUND([Cache (sql plans)], 1), 0) as varchar(16))
+, [Lock Manager] = CAST(ISNULL(ROUND([Lock Manager], 1), 0) as varchar(16))
 , [Other] = CAST(ISNULL(ROUND([Other], 1), 0) as varchar(16))
 FROM (SELECT ClerkCategory, UsedPercent FROM #MemoryClerk) as G1
 PIVOT
 (
 	SUM(UsedPercent)
-	FOR ClerkCategory IN ([Buffer Pool], [Cache (objects)], [Cache (sql plans)], [Other])
+	FOR ClerkCategory IN ([Buffer Pool], [Cache (objects)], [Cache (sql plans)], [Lock Manager], [Other])
 ) AS PivotTable
 
 UNION ALL
@@ -95,12 +101,13 @@ SELECT 'UsedBytes'
 , [Buffer Pool] = CAST(ISNULL(ROUND([Buffer Pool], 1), 0) as varchar(16))
 , [Cache (objects)] = CAST(ISNULL(ROUND([Cache (objects)], 1), 0) as varchar(16))
 , [Cache (sql plans)] = CAST(ISNULL(ROUND([Cache (sql plans)], 1), 0) as varchar(16))
+, [Lock Manager] = CAST(ISNULL(ROUND([Lock Manager], 1), 0) as varchar(16))
 , [Other] = CAST(ISNULL(ROUND([Other], 1), 0) as varchar(16))
 FROM (SELECT ClerkCategory, UsedBytes FROM #MemoryClerk) as G2 
 PIVOT
 (
 	SUM(UsedBytes)
-	FOR ClerkCategory IN ([Buffer Pool], [Cache (objects)], [Cache (sql plans)], [Other])
+	FOR ClerkCategory IN ([Buffer Pool], [Cache (objects)], [Cache (sql plans)], [Lock Manager], [Other])
 ) AS PivotTable
 ) as T
 
