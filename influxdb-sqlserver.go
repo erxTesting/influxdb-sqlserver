@@ -18,9 +18,9 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	cfg "github.com/bazauto/influxdb-sqlserver/config"
-	"github.com/bazauto/influxdb-sqlserver/etl"
-	"github.com/bazauto/influxdb-sqlserver/log"
+	cfg "./config"
+	"./etl"
+	"./log"
 )
 
 var wg sync.WaitGroup

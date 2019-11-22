@@ -141,6 +141,9 @@ func (loa *loader) Load() error {
 		// Handle error
 		return errors.New(string(htmlData))
 	}
+
+	// Close any connections that have become idle
+	client.CloseIdleConnections()
 	return nil
 
 }
