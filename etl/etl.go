@@ -99,7 +99,17 @@ func NewLoader(url, result string) loader {
 // 5xx: The system is overloaded or significantly impaired
 func (loa *loader) Load() error {
 
-	client := &http.Client{}
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+
+	config := &tls.Config{
+		RootCAs:            rootCAs,
+	}
+
+	tr := &http.Transport{TLSClientConfig: config}
+	client := &http.Client{Transport: tr}
 	req, err := http.NewRequest("POST", loa.url, bytes.NewBufferString(loa.result))
 	req.Header.Set("Content-Type", "application/text")
 	if len(loa.username) > 0 {

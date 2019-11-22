@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bazauto/influxdb-sqlserver/Godeps/_workspace/src/github.com/BurntSushi/toml"
+	"github.com/BurntSushi/toml"
 
 	cfg "github.com/bazauto/influxdb-sqlserver/config"
 	"github.com/bazauto/influxdb-sqlserver/etl"
@@ -170,6 +170,7 @@ func (toml *TOMLConfig) Validate() error {
 
 	// InfluxDB
 	fullUrl := strings.Replace(toml.InfluxDB.Url, "http://", "", -1)
+	fullUrl = strings.Replace(fullUrl, "https://", "", -1)				// Allow either http or https
 
 	host, portStr, err := net.SplitHostPort(fullUrl)
 	if err != nil {
@@ -281,7 +282,7 @@ func connectionString(server cfg.Server) string {
 	// Omit the port if it is zero (i.e. not set in the config)
 	portStr := ""
 	if (server.Port >= 1 && server.Port <= 65535) {
-		portStr = fmt.Sprintf("Port=%v,", server.Port)
+		portStr = fmt.Sprintf("Port=%v;", server.Port)
 	}
 
 	// Start off with integrated Windows auth
