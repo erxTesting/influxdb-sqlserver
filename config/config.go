@@ -38,6 +38,7 @@ type TOMLConfig struct {
 }
 type general struct {
 	ScriptPath      string
+	RootCertPath	string
 }
 type polling struct {
 	Interval        int

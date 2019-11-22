@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"crypto/tls"
+	"crypto/x509"
 
 	_ "github.com/zensqlmonitor/go-mssqldb"
 )
@@ -76,20 +78,24 @@ type Loader interface {
 }
 
 type loader struct {
-	url       string
-	database  string
-	username  string
-	password  string
-	precision string
-	result    string
+	url             string
+	rootCAs         *x509.CertPool
+	skipCertVerify  bool
+	database        string
+	username        string
+	password        string
+	precision       string
+	result          string
 }
 
 var _ Loader = (*loader)(nil)
 
-func NewLoader(url, result string) loader {
+func NewLoader(url string, rootCAs *x509.CertPool, skipCertVerify bool,  result string) loader {
 	loa := loader{}
 	loa.url = url
 	loa.result = result
+	loa.rootCAs = rootCAs
+	loa.skipCertVerify = skipCertVerify
 	return loa
 }
 
@@ -99,13 +105,9 @@ func NewLoader(url, result string) loader {
 // 5xx: The system is overloaded or significantly impaired
 func (loa *loader) Load() error {
 
-	rootCAs, _ := x509.SystemCertPool()
-	if rootCAs == nil {
-		rootCAs = x509.NewCertPool()
-	}
-
 	config := &tls.Config{
-		RootCAs:            rootCAs,
+		InsecureSkipVerify: loa.skipCertVerify,
+		RootCAs:            loa.rootCAs,
 	}
 
 	tr := &http.Transport{TLSClientConfig: config}

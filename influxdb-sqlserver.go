@@ -14,6 +14,7 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"crypto/x509"
 
 	"github.com/BurntSushi/toml"
 
@@ -38,6 +39,8 @@ type Param struct {
 	fullFilePath    string
 	pollingInterval int
 	url             string
+	rootCAs 		*x509.CertPool
+	skipCertVerify	bool
 	database        string
 	username        string
 	password        string
@@ -249,7 +252,7 @@ func (p *Param) gather() {
 
 			// load data
 			start = time.Now()
-			loa := etl.NewLoader(fmt.Sprintf("%s/write?db=%s&precision=%s", p.url, p.database, p.precision), ext.Result)
+			loa := etl.NewLoader(fmt.Sprintf("%s/write?db=%s&precision=%s", p.url, p.database, p.precision), p.rootCAs, p.skipCertVerify, ext.Result)
 			err = loa.Load()
 			if err != nil {
 				// Handle error
@@ -297,6 +300,30 @@ func connectionString(server cfg.Server) string {
 	return connString
 }
 
+func loadCert(filePath string) *x509.CertPool {
+		// Get the SystemCertPool, continue with an empty pool on error
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+
+	if len(filePath) > 0 {
+
+		// Read in the cert file
+		certs, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			log.Error(1, fmt.Sprintf("Failed to append %q to RootCAs: %v", filePath, err), err)
+		}
+
+		// Append our cert to the system pool
+		if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
+			log.Info("No certs appended, using system certs only")
+		}
+	}
+
+	return rootCAs
+}
+
 //
 // Main
 //
@@ -320,6 +347,9 @@ func main() {
 
 	// listen to System Signals
 	go listenToSystemSignals()
+
+	// 
+	rootCAs := loadCert(config.General.RootCertPath)
 
 	// polling loop
 	log.Info("Starting influxdb-sqlserver")
@@ -353,6 +383,8 @@ func main() {
 				scriptPath,
 				scriptInterval,
 				config.InfluxDB.Url,
+				rootCAs,
+				false, /* Skip Cert Verify */
 				config.InfluxDB.Database,
 				config.InfluxDB.Username,
 				config.InfluxDB.Password,
